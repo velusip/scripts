@@ -16,7 +16,7 @@
 #   * nicotine - print to channel with /np
 #     Alt + e, n --> Other --> enter /path/to/npcmus.sh
 #   * xmobarrc - commands = []
-#     Run Com "/path/to/npcmus.sh" "" "npcmus" 5
+#     Run Com "sh" ["/path/to/npcmus.sh"] "npcmus" 5
 #
 #########################################################################
 
