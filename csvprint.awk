@@ -35,8 +35,13 @@ END {
 	for (record=1; record<=NR; record++)
 		for (field=1; field<= tbl[record,-1]; field++)
 			if (field == tbl[record,-1])
-				printf "%" tbl[-1,field]+length(FS) "s\n", tbl[record,field];
+				printf "%" tbl[-1,field] "s\n", tbl[record,field];
 			else
-				printf "%" tbl[-1,field]+length(FS) "s%s", tbl[record,field], FS;
+				printf "%" tbl[-1,field] "s ", tbl[record,field];
 }
 
+#alternative with FS left in
+#			if (field == tbl[record,-1])
+#				printf "%" tbl[-1,field]+length(FS) "s\n", tbl[record,field];
+#			else
+#				printf "%" tbl[-1,field]+length(FS) "s%s", tbl[record,field], FS;

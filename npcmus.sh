@@ -16,8 +16,57 @@
 #   * nicotine - print to channel with /np
 #     Alt + e, n --> Other --> enter /path/to/npcmus.sh
 #   * xmobarrc - commands = []
-#     Run Com "sh" ["/path/to/npcmus.sh"] "npcmus" 5
+#     Run Com "sh" ["/path/to/npcmus.sh"] "npcmus" 10
 #
 #########################################################################
 
-cmus-remote -Q | awk 'function toEnd(iStr, skip) { return substr(iStr, match(iStr, skip) + length(skip) + 1); } NR == 1 {if($0 ~ "running") {offline = 1; exit 1;} } NR == 2 && $1 ~ "file" {file = toEnd($0, "file");} $2 ~ "artist" {artist = toEnd($0, "artist");} $2 ~ "title" {title = toEnd($0, "title");} END { if(artist && title) {print "Now playing: ", artist, " - ", title;} else if(file) {print "Now playing: ", file;} }'
+cmus-remote -Q | awk '\
+function toEnd(iStr, skip)\
+{\
+    return substr(iStr, match(iStr, skip) + length(skip) + 1);\
+}\
+function tagless(iStr)\
+{\
+    return substr(iStr, match(iStr, "/[^/]*/[^/]*$") );\
+}\
+NR == 1 {\
+    if($0 ~ "running") {\
+        offline = 1; exit 1\
+    }\
+}\
+NR == 2 && $1 ~ "file" {\
+    file = toEnd($0, "file");\
+}\
+NR != 2 && $2 ~ "^artist$" {\
+    if(artist == "")\
+    {\
+        artist = toEnd($0, "artist");\
+    }\
+}\
+NR != 2 && $2 ~ "^album$" {\
+    if(album == "")\
+    {\
+        album = toEnd($0, "album");\
+    }\
+}\
+NR != 2 && $2 ~ "title" {\
+    title = toEnd($0, "title");\
+}\
+$2 ~ "shuffle" && $3 ~ "true" {\
+    shuffle = " (S)";\
+}\
+END {\
+    np = "OnAir" shuffle ": ";\
+    if(artist && album && title)\
+    {\
+        print np, artist, "-", album, "-", title\
+    }\
+    if(artist && title)\
+    {\
+        print np, artist, "-", title\
+    }\
+    else if(file)\
+    {\
+        print np, tagless(file);\
+    }\
+}'

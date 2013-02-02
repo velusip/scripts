@@ -28,11 +28,28 @@ function uploadImage {
   curl -s -F "image=@$1" -F "key=73dac580f5af975538021ca70686fdf1" http://imgur.com/api/upload.xml | grep -E -o "<original_image>(.)*</original_image>" | grep -E -o "http://i.imgur.com/[^<]*"
 }
 
+
+#parse arguments
+while getopts s: name
+do
+    case $name in
+        s)    sflag=1
+              sval="$OPTARG";;
+        ?)    printf "Usage: %s: [-s] args\n" $0
+              exit 2;;
+    esac
+done
+if [ ! -z "$sflag" ]; then
+    printf "Option -a specified\n"
+fi
+shift $(($OPTIND - 1))
+
+
+
 #datestamp file the way I like it.  e.g. scrot_hostname_YYYYMMDDHHMM.png
 thedate=`date +%Y%m%d`
 thetime=`date +%H%M`
-thishost=`echo "$STY" | grep -o "\([^.]*$\)"`
-img='scrot_'${thishost}'_'${thedate}${thetime}'.png'
+img='scrot_'${HOSTNAME}'_'${thedate}${thetime}'.png'
 
 #check for a screenshot directory, doesn't matter really
 if [ -d ~/.screenshot ]; then
@@ -51,19 +68,20 @@ elif [ ! -x /usr/bin/feh ]; then
     exit 1;
 fi
 
-#select area for a picture
-scrot -s "$img"
+# -s flag
+#select area for picture, fork a preview, provide options.  Else just save screen
+if [ ! -z "$sflag" ]; then
+    scrot -s "$img"
+    feh "$img"&
+    echo -n "[D]elete, [S]tore, [I]mgur? [Enter]"
+    read action
+    case "$action" in
+        [Dd]) rm "$img";;
+        [Ii]) uploadImage "$img" | xclip -selection primary;;
+    esac
+else
+    scrot "$img"
+fi
 
-#fork preview
-feh "$img"&
-
-#prompt
-echo -n "[D]elete, [S]tore, [I]mgur? [Enter]"
-read action
-case "$action" in
-    [Dd]) rm "$img";;
-    [Ii]) uploadImage "$img" | xclip -selection primary;;
-esac
-
-#[S]tore, lol
+#[S]tore
 echo "Done!"
