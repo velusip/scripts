@@ -61,7 +61,7 @@ END {\
     {\
         print np, artist, "-", album, "-", title\
     }\
-    if(artist && title)\
+    else if(artist && title)\
     {\
         print np, artist, "-", title\
     }\
