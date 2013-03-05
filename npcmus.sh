@@ -29,6 +29,9 @@ function tagless(iStr)\
 {\
     return substr(iStr, match(iStr, "/[^/]*/[^/]*$") );\
 }\
+BEGIN {\
+    shuf = "-";\
+}\
 NR == 1 {\
     if($0 ~ "running") {\
         offline = 1; exit 1\
@@ -53,20 +56,19 @@ NR != 2 && $2 ~ "title" {\
     title = toEnd($0, "title");\
 }\
 $2 ~ "shuffle" && $3 ~ "true" {\
-    shuffle = " (S)";\
+    shuf = "<fc=#f00>*</fc>";\
 }\
 END {\
-    np = "OnAir" shuffle ": ";\
     if(artist && album && title)\
     {\
-        print np, artist, "-", album, "-", title\
+        print artist, shuf, album, shuf, title\
     }\
     else if(artist && title)\
     {\
-        print np, artist, "-", title\
+        print artist, shuf, title\
     }\
     else if(file)\
     {\
-        print np, tagless(file);\
+        print tagless(file);\
     }\
 }'
