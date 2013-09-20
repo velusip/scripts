@@ -1,0 +1,143 @@
+#!/bin/bash
+#########################################################################
+#
+#  ssur -- Take screenshots, upload to imgur.
+#  Copyleft (cl) 2010 velusip, velusip@gmail.com
+#
+#########################################################################
+#
+#  Flags:  [-bdipsuv]
+#  -b  Select-box mode. Drag window around captured area.
+#  -d  Delete local copy
+#  -i  Interactive mode
+#  -p  Preview window (forced with -i)
+#  -s  Save local copy (default)
+#  -u  Upload to imgur.com
+#      URL is stored in primary X selection.  (Paste with mouse3)
+#  -v  Verbose
+#
+#  Examples:
+#  $ ssur -u  # Upload full screenshot to imgur.com
+#  $ ssur -sl # Select-box on screen, save locally
+#  $ ssur -iv # Select-box, interactive, preview, verbose.
+#
+#  Dependencies:  curl, scrot, xclip, feh
+#
+#  Thanks:
+#    hunterm, imgur.com for service, and Sirupsen:
+#    http://sirupsen.com/a-simple-imgur-bash-screenshot-utility/
+#
+#########################################################################
+# ssur imgur api-key 73dac580f5af975538021ca70686fdf1
+
+storedir="~/.screenshot"
+thedate=`date +%Y%m%d`
+thetime=`date +%H%M`
+img='scrot_'${HOSTNAME}'_'${thedate}${thetime}'.png'
+sflag=1
+
+# Sirupsen's function
+function uploadImage {
+  curl -s -F "image=@$1" -F "key=73dac580f5af975538021ca70686fdf1" http://imgur.com/api/upload.xml | grep -E -o "<original_image>(.)*</original_image>" | grep -E -o "http://i.imgur.com/[^<]*"
+}
+
+function verbose() {
+    if [ ! -z "$vflag" ]; then
+        printf "%s\n" $1
+    fi
+}
+
+if [ ! -x /usr/bin/scrot ]; then
+    echo "Missing dependency: scrot"
+    exit 1;
+elif [ ! -x /usr/bin/curl ]; then
+    echo "Missing dependency: curl"
+    exit 1;
+elif [ ! -x /usr/bin/feh ]; then
+    echo "Missing dependency: feh"
+    exit 1;
+fi
+if [ -d $storedir ]; then
+    cd $storedir
+fi
+
+while getopts bdipsuv opflags
+do
+    case $opflags in
+        b) bflag=1;;
+        d) dflag=1;unset sflag;;
+        i) iflag=1;pflag=1;;
+        p) pflag=1;;
+        s) sflag=1;unset dflag;;
+        u) uflag=1;;
+        v) vflag=1;;
+        ?) printf "Usage: %s: [-bdipsuv]\n\
+    -b  Selection-box mode
+    -d  Delete locally\n\
+    -i  Interactive mode\n\
+    -p  Preview window (forced with -i)\n\
+    -s  Save locally (default)\n\
+    -u  Upload to imgur.com\n\
+    -v  Verbose\n" $0
+           exit 2;;
+    esac
+done
+shift $(($OPTIND - 1))
+
+# Select-Box
+if [ ! -z "$bflag" ]; then
+    verbose "Select-box"
+    scrot -s "$img"
+else
+    #default
+    verbose "Fullscreen"
+    scrot "$img"
+fi
+
+# -p Preview
+if [ ! -z "$pflag" ]; then
+    verbose "Fork feh"
+    feh "$img"&
+fi
+
+# -i Interactive
+if [ ! -z "$iflag" ]; then
+    printf "\
+[s]ave locally\n\
+[d]elete locally\n\
+[u]pload to imgur\n\
+Enter option: "
+    read action
+    if [ ! -z "$action" ]; then
+        for (( i=0; i<${#action}; i++ ))
+        do
+            case "${action:$i:1}" in
+                [Ss]) sflag=1;unset dflag;;
+                [Dd]) dflag=1;unset sflag;;
+                [Uu]) uflag=1;;
+            esac
+        done
+    else
+        echo "No options, saving as $img"
+        sflag=1
+    fi
+fi
+
+# -u Upload
+if [ ! -z "$uflag" ]; then
+    verbose "Uploading..."
+    uploadImage "$img" | xclip -selection primary
+    verbose "done"
+fi
+
+# Save locally
+if [ ! -z "$sflag" ]; then
+    verbose "Saving screenshot"
+fi
+
+# -d Delete locally
+if [ ! -z "$dflag" ]; then
+    verbose "Deleting screenshot"
+    rm "$img"
+fi
+
