@@ -2,7 +2,7 @@
 #########################################################################
 #
 #  ssur -- Take screenshots, upload to imgur.
-#  Copyleft (cl) 2013 velusip, velusip@gmail.com
+#  Copyleft (cl) 2010 velusip, velusip@gmail.com
 #
 #########################################################################
 #
@@ -30,7 +30,7 @@
 #########################################################################
 # ssur imgur api-key 73dac580f5af975538021ca70686fdf1
 
-storedir="~/.screenshot"
+storedir=~/.screenshot
 thedate=`date +%Y%m%d`
 thetime=`date +%H%M`
 img='scrot_'${HOSTNAME}'_'${thedate}${thetime}'.png'
@@ -38,7 +38,7 @@ sflag=1
 
 # Sirupsen's function
 function uploadImage {
-  curl -s -F "image=@$1" -F "key=73dac580f5af975538021ca70686fdf1" http://imgur.com/api/upload.xml | grep -E -o "<original_image>(.)*</original_image>" | grep -E -o "http://i.imgur.com/[^<]*"
+  curl -s -F "image=@$1" -F "key=73dac580f5af975538021ca70686fdf1" http://imgur.com/api/upload.xml | grep -E -o "<original_image>(.)*</original_image>" | grep -E -o "http://i.imgur.com/[^<]*" | tr -d '\012\015'
 }
 
 function verbose() {
