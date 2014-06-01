@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Ask bc for the nth root of a number.
+# 
+# Usage:
+#   nthroot <degree> <number>
+
+# Based on the nth root principle:
+#    n√x
+#  = x^(1/n)
+#  = e^((ln x)/n)
+#
+# And code found here: http://phodd.net/gnu-bc/code/output_formatting.bc
+
+if [[ -n "$1" && -n "$2" ]]; then
+code="define trunc(x)
+{
+    auto os,ts,s,d,tx;
+    os=scale;
+    d=length(x)-scale(x);
+    if (d<5 || d>scale)
+        d=5;
+    ts=scale-d;
+    if(scale >= d+d)
+    {
+        scale=ts;
+        s=1;
+        if(x<0)
+            s = -1;
+        x += s*A^-scale;
+        . = scale--;
+        x /= 1;
+    }
+    for(scale = 0; scale <= ts; scale++)
+        if(x==(tx=x/1))
+        {
+            x=tx;
+            break;
+        }
+    scale=os;
+    return(x)
+}
+scale=20;
+x = e(l($2)/$1)
+x
+trunc(x)"
+echo "$code" | bc -l
+else
+    echo "Usage: "${0##*/}" <degree> <number>"
+fi

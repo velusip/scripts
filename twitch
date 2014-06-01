@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+SIZE="1280x1024" 
+BITRATE="128k"  
+FRAMERATE="15"
+KEY=$(cat ~/.twitch_key)
+ffmpeg -f x11grab -s $SIZE -r $FRAMERATE -i $DISPLAY \
+    -f alsa -ac 2 -i plughw:0,0 \
+    -f alsa -ac 1 -i plughw:1,2 \
+    -b $BITRATE -vcodec libx264 -g 2 -threads 0 -acodec libmp3lame -ab 128k -ar 44100 -f flv "rtmp://live.justin.tv/app/$KEY"
+
+#    -filter_complex '[0:a:0][1:a:0]amix=inputs=2' \
+
+
+# Max keyframe interval is currently at 12.5 seconds. Please set it to 2 seconds.
+# use -g 2
+# The broadcast is not set to constant bitrate (CBR). [Current average: 245 kbps, current max: 524.0 kbps]
+# use -cb
+# rescale video:
+# -s 640x400
+# -vf scale=w=640:h=-1
+
+# https://trac.ffmpeg.org/wiki/How to grab the desktop (screen) with FFmpeg
+
+#from desktop, starting with upper-left corner at (x=100, y=200) with the width and height of 1024x768.
+#ffmpeg -f x11grab -r 25 -s 1024x768 -i :0.0+100,200 output.flv
+
+#If you need audio too, you can use alsa like this:
+#ffmpeg -f x11grab -r 25 -s 1024x768 -i :0.0+100,200 -f alsa -ac 2 -i pulse output.flv
+
