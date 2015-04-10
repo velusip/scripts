@@ -1,0 +1,28 @@
+# Many steam games only support xbox controller on js0.
+# Using xboxdrv we can map events from another controller to suit.
+
+#disable energy saving feature (auto screen off)
+xset -dpms
+
+#move first joystick out of the way
+sudo mv /dev/input/js0 /dev/input/js9
+
+#remap Nintendo Wii Classic Controller Pro to Xbox360 xpad defaults
+sudo xboxdrv \
+--evdev /dev/input/by-id/usb-raphnet.net_WUSBmote_v1.3_1001-event-joystick \
+--evdev-absmap ABS_X=x1,ABS_Y=y1 \
+--evdev-absmap ABS_RX=x2,ABS_RY=y2 \
+--evdev-keymap BTN_START=dl,BTN_SELECT=dr,BTN_TL2=du,BTN_TR2=dd \
+--evdev-keymap BTN_THUMBR=guide,BTN_THUMBL=back,BTN_A=start \
+--evdev-keymap BTN_X=a,BTN_Y=b,BTN_B=x,BTN_C=y \
+--evdev-keymap BTN_TR=rt,BTN_MODE=lt \
+--evdev-keymap BTN_Z=lb,BTN_TL=rb \
+--axismap -y1=y1,-y2=y2 \
+--trigger-as-button \
+--mimic-xpad \
+--silent \
+"$@"
+
+sudo mv /dev/input/js9 /dev/input/js0
+xset +dpms
+

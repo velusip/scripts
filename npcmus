@@ -8,15 +8,18 @@
 #
 #     npcmus requires awk and cmus
 #
-#   Protips:
+#   Examples:
 #   * irssi - print to channel with /npc
-#     /alias npc exec -nosh -window -out - /path/to/npcmus.sh
+#     /alias npc exec -nosh -window -out - /path/to/npcmus
+#
 #   * irssi - print only to you with /np
-#     /alias np exec -nosh -window - /path/to/npcmus.sh
+#     /alias np exec -nosh -window - /path/to/npcmus
+#
 #   * nicotine - print to channel with /np
-#     Alt + e, n --> Other --> enter /path/to/npcmus.sh
+#     Alt + e, n --> Other --> enter /path/to/npcmus
+#
 #   * xmobarrc - commands = []
-#     Run Com "sh" ["/path/to/npcmus.sh"] "npcmus" 10
+#     Run Com "sh" ["/path/to/npcmus"] "npcmus" 10
 #
 #########################################################################
 

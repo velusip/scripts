@@ -56,6 +56,9 @@ elif [ ! -x /usr/bin/curl ]; then
 elif [ ! -x /usr/bin/feh ]; then
     echo "Missing dependency: feh"
     exit 1;
+elif [ ! -x /usr/bin/xclip ]; then
+    echo "Missing dependency: xclip"
+    exit 1;
 fi
 if [ -d $storedir ]; then
     cd $storedir
