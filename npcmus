@@ -34,6 +34,7 @@ function tagless(iStr)\
 }\
 BEGIN {\
     shuf = "-";\
+    icon = "<fc=#f00>*</fc>";\
 }\
 NR == 1 {\
     if($0 ~ "running") {\
@@ -59,7 +60,11 @@ NR != 2 && $2 ~ "title" {\
     title = toEnd($0, "title");\
 }\
 $2 ~ "shuffle" && $3 ~ "true" {\
-    shuf = "<fc=#f00>*</fc>";\
+    shuf = icon;\
+}\
+$1 ~ "^stream$" {\
+    stream = toEnd($0, "stream");\
+    sub(/-/, icon, stream);\
 }\
 END {\
     if(artist && album && title)\
@@ -69,6 +74,10 @@ END {\
     else if(artist && title)\
     {\
         print artist, shuf, title\
+    }\
+    else if(stream)\
+    {\
+        print stream\
     }\
     else if(file)\
     {\
