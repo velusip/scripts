@@ -1,29 +1,61 @@
-#!/bin/sh
+#!/usr/bin/env sh
 #########################################################################
 #
 #   npcmus - outputs what cmus is currently playing.
-#   Copyleft (cl) 2010 velusip, velusip@gmail.com
+#   Copyleft (cl) 2017 velusip, velusip@gmail.com
 #
 #########################################################################
 #
 #     npcmus requires awk and cmus
 #
-#   Examples:
 #   * irssi - print to channel with /npc
-#     /alias npc exec -nosh -window -out - /path/to/npcmus
-#
+#     /alias npc exec -nosh -window -out - /path/to/npcmus.sh
 #   * irssi - print only to you with /np
-#     /alias np exec -nosh -window - /path/to/npcmus
-#
+#     /alias np exec -nosh -window - /path/to/npcmus.sh
 #   * nicotine - print to channel with /np
-#     Alt + e, n --> Other --> enter /path/to/npcmus
-#
+#     Alt + e, n --> Other --> enter /path/to/npcmus.sh
 #   * xmobarrc - commands = []
-#     Run Com "sh" ["/path/to/npcmus"] "npcmus" 10
+#     Run Com "sh" ["/path/to/npcmus.sh -s $<fc=#f00>*</fc>"] "npcmus" 10
 #
 #########################################################################
 
-cmus-remote -Q | awk '\
+usage()
+{
+    cat << EOF
+    usage: $0 options
+
+    This script displays a one-line string output of cmus-remote.
+
+    OPTIONS:
+     -h show this help message
+     -s,--seperator "$<fc=#f00>*</fc>"
+     -p,--prefix "Now Playing: "
+EOF
+}
+
+sep="★"
+pre=""
+while getopts "hs:p:" OPTION
+do
+    case $OPTION in
+        h)
+            usage
+            exit 1
+            ;;
+        s)
+            sep=$OPTARG
+            ;;
+        p)
+            pre=$OPTARG
+            ;;
+        ?)
+            usage
+            exit
+            ;;
+    esac
+done
+
+cmus-remote -Q | awk -v prefix="$pre" -v seperator="$sep" '\
 function toEnd(iStr, skip)\
 {\
     return substr(iStr, match(iStr, skip) + length(skip) + 1);\
@@ -34,7 +66,10 @@ function tagless(iStr)\
 }\
 BEGIN {\
     shuf = "-";\
-    icon = "<fc=#f00>*</fc>";\
+    if(seperator == "")\
+    {\
+        seperator = "$<fc=#f00>★</fc>";\
+    }\
 }\
 NR == 1 {\
     if($0 ~ "running") {\
@@ -43,6 +78,9 @@ NR == 1 {\
 }\
 NR == 2 && $1 ~ "file" {\
     file = toEnd($0, "file");\
+}\
+$1 ~ "^stream" {\
+    stream = toEnd($0, "stream");\
 }\
 NR != 2 && $2 ~ "^artist$" {\
     if(artist == "")\
@@ -56,31 +94,27 @@ NR != 2 && $2 ~ "^album$" {\
         album = toEnd($0, "album");\
     }\
 }\
-NR != 2 && $2 ~ "title" {\
+NR != 2 && $2 ~ "\\ytitle\\y" {\
     title = toEnd($0, "title");\
 }\
 $2 ~ "shuffle" && $3 ~ "true" {\
-    shuf = icon;\
-}\
-$1 ~ "^stream$" {\
-    stream = toEnd($0, "stream");\
-    sub(/-/, icon, stream);\
+    shuf = seperator;\
 }\
 END {\
     if(artist && album && title)\
     {\
-        print artist, shuf, album, shuf, title\
+        print prefix, artist, shuf, album, shuf, title\
     }\
     else if(artist && title)\
     {\
-        print artist, shuf, title\
+        print prefix, artist, shuf, title\
     }\
     else if(stream)\
     {\
-        print stream\
+        print prefix, tagless(title), ": " tagless(stream);\
     }\
     else if(file)\
     {\
-        print tagless(file);\
+        print prefix, tagless(file);\
     }\
 }'
