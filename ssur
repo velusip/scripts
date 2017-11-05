@@ -32,7 +32,7 @@
 
 storedir=~/.screenshot
 thedate=`date +%Y%m%d`
-thetime=`date +%H%M`
+thetime=`date +%H%M%S`
 img='scrot_'${HOSTNAME}'_'${thedate}${thetime}'.png'
 sflag=1
 
