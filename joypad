@@ -1,12 +1,32 @@
-# Many steam games only support xbox controller on js0.
-# Using xboxdrv we can map events from another controller to suit.
+# Move js0 and start xboxdrv for Xpadder games that only know js0.
+# Note:  /proc/bus/input/devices not updated in this script
 
-#disable energy saving feature (auto screen off)
+cat /proc/bus/input/devices | awk 'BEGIN { joysticks; lastdevice = "" } $0 ~ /Name=/ { s = ""; for (i = 2; i <= NF; i++) s = s $i " "; lastdevice = s } $0 ~ /Handlers=/ && $0 ~ /js[0-9]/ { print $2 " " $3 " " lastdevice}'
+
+# disable auto screen off since we won't be using mouse or keyboard for a while.
 xset -dpms
 
-#move first joystick out of the way
-sudo mv /dev/input/js0 /dev/input/js9
+#move first joystick out of the way to accomodate Xpadder's requirements
+if [ -e /dev/input/js0 ]; then
+    revert=1
+    joysticks=(/dev/input/js*)
+    echo "joysticks: " ${joysticks[*]}
+    jscount=${#joysticks[@]}
+    echo "number of handlers: " $jscount
+    sorted=($(sort -V <<<"${joysticks[*]}"))
+    echo "sorted: " ${sorted[*]}
+    lastindex=${sorted[-1]}
+    echo "last handler: " $lastindex
+    jsnumber=${lastindex#*js}
+    echo "number: " $jsnumber
+    incremented=$(expr $jsnumber + 1)
+    echo "incremented: " $incremented
 
+    echo "Moving js0 to js$incremented." >&2
+    sudo mv /dev/input/js0 /dev/input/js$incremented
+fi
+
+echo "Starting xboxdrv." >&2
 #remap Nintendo Wii Classic Controller Pro to Xbox360 xpad defaults
 sudo xboxdrv \
 --evdev /dev/input/by-id/usb-raphnet.net_WUSBmote_v1.3_1001-event-joystick \
@@ -20,9 +40,11 @@ sudo xboxdrv \
 --axismap -y1=y1,-y2=y2 \
 --trigger-as-button \
 --mimic-xpad \
---silent \
-"$@"
+--silent
 
-sudo mv /dev/input/js9 /dev/input/js0
+#revert
+if [ -n revert ]; then
+    sudo mv /dev/input/js$incremented /dev/input/js0
+fi
+
 xset +dpms
-
